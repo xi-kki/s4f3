@@ -1,4 +1,4 @@
-const API_URL = '/api'
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
 
 export async function fetchBookmarks(skip = 0, limit = 20) {
   const res = await fetch(`${API_URL}/bookmarks/?skip=${skip}&limit=${limit}`)
