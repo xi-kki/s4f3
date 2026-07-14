@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from app.core.database import get_db
+from app.core.auth import verify_token
 from app.models.bookmark import Bookmark
 from app.services.ai import summarize_content, chat_with_bookmarks
 
@@ -16,7 +17,6 @@ class SummarizeRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    user_id: str = "default"
 
 @router.post("/summarize")
 async def summarize_url(data: SummarizeRequest):
@@ -24,10 +24,14 @@ async def summarize_url(data: SummarizeRequest):
     return result
 
 @router.post("/chat")
-async def chat(data: ChatRequest, db: AsyncSession = Depends(get_db)):
+async def chat(
+    data: ChatRequest,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
+):
     result = await db.execute(
         select(Bookmark)
-        .where(Bookmark.user_id == data.user_id)
+        .where(Bookmark.user_id == user_id)
         .order_by(Bookmark.created_at.desc())
         .limit(50)
     )

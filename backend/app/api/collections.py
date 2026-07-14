@@ -4,6 +4,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from typing import Optional
 from app.core.database import get_db
+from app.core.auth import verify_token
 from app.models.bookmark import Collection, Bookmark
 
 router = APIRouter()
@@ -15,8 +16,8 @@ class CollectionCreate(BaseModel):
 
 @router.get("/")
 async def list_collections(
-    user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
 ):
     result = await db.execute(
         select(Collection).where(Collection.user_id == user_id)
@@ -27,8 +28,8 @@ async def list_collections(
 @router.post("/")
 async def create_collection(
     data: CollectionCreate,
-    user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
 ):
     collection = Collection(
         user_id=user_id,

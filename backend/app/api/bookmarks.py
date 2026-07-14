@@ -4,6 +4,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from typing import List, Optional
 from app.core.database import get_db
+from app.core.auth import verify_token
 from app.models.bookmark import Bookmark
 
 router = APIRouter()
@@ -34,10 +35,10 @@ class BookmarkResponse(BaseModel):
 
 @router.get("/")
 async def list_bookmarks(
-    user_id: str = "default",
     skip: int = 0,
     limit: int = 20,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
 ):
     result = await db.execute(
         select(Bookmark)
@@ -52,8 +53,8 @@ async def list_bookmarks(
 @router.post("/")
 async def create_bookmark(
     data: BookmarkCreate,
-    user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
 ):
     bookmark = Bookmark(
         user_id=user_id,
@@ -70,16 +71,34 @@ async def create_bookmark(
     return bookmark
 
 @router.get("/{bookmark_id}")
-async def get_bookmark(bookmark_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Bookmark).where(Bookmark.id == bookmark_id))
+async def get_bookmark(
+    bookmark_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
+):
+    result = await db.execute(
+        select(Bookmark).where(
+            Bookmark.id == bookmark_id,
+            Bookmark.user_id == user_id
+        )
+    )
     bookmark = result.scalar_one_or_none()
     if not bookmark:
         raise HTTPException(status_code=404, detail="Bookmark not found")
     return bookmark
 
 @router.patch("/{bookmark_id}/favorite")
-async def toggle_favorite(bookmark_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Bookmark).where(Bookmark.id == bookmark_id))
+async def toggle_favorite(
+    bookmark_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
+):
+    result = await db.execute(
+        select(Bookmark).where(
+            Bookmark.id == bookmark_id,
+            Bookmark.user_id == user_id
+        )
+    )
     bookmark = result.scalar_one_or_none()
     if not bookmark:
         raise HTTPException(status_code=404, detail="Bookmark not found")
@@ -88,8 +107,17 @@ async def toggle_favorite(bookmark_id: int, db: AsyncSession = Depends(get_db)):
     return bookmark
 
 @router.delete("/{bookmark_id}")
-async def delete_bookmark(bookmark_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Bookmark).where(Bookmark.id == bookmark_id))
+async def delete_bookmark(
+    bookmark_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(verify_token)
+):
+    result = await db.execute(
+        select(Bookmark).where(
+            Bookmark.id == bookmark_id,
+            Bookmark.user_id == user_id
+        )
+    )
     bookmark = result.scalar_one_or_none()
     if not bookmark:
         raise HTTPException(status_code=404, detail="Bookmark not found")

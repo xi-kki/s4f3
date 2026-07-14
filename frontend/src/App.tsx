@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react'
+import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useStore } from './hooks/useBookmarks'
 import { BookmarkCard } from './components/BookmarkCard'
 import { SaveModal } from './components/SaveModal'
 import { AIChat } from './components/AIChat'
 import { SearchBar } from './components/SearchBar'
-import { LayoutGrid, List, Table, Kanban, Plus, MessageCircle, Loader2 } from 'lucide-react'
+import { AuthModal } from './components/AuthModal'
+import { LayoutGrid, List, Table, Kanban, Plus, MessageCircle, Loader2, LogOut, User } from 'lucide-react'
 
-function App() {
+function AppContent() {
+  const { user, signOut, loading: authLoading } = useAuth()
   const { bookmarks, view, setView, loadBookmarks, loading } = useStore()
   const [showSave, setShowSave] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
-    loadBookmarks()
-  }, [])
+    if (user) {
+      loadBookmarks()
+    }
+  }, [user])
 
   const views = [
     { id: 'grid' as const, icon: LayoutGrid, label: 'Grid' },
@@ -21,6 +27,44 @@ function App() {
     { id: 'table' as const, icon: Table, label: 'Table' },
     { id: 'kanban' as const, icon: Kanban, label: 'Kanban' },
   ]
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+        <Loader2 className="animate-spin text-blue-500" size={32} />
+      </div>
+    )
+  }
+
+  // Show auth screen if not logged in
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+        <div className="text-center">
+          <span className="text-6xl mb-4 block">🔗</span>
+          <h1 className="text-3xl font-bold mb-2">S4F3</h1>
+          <p className="text-zinc-400 mb-8">AI-powered bookmarking — save smarter, find faster</p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => setShowAuth(true)}
+              className="flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-3 font-medium hover:bg-blue-600 transition-colors"
+            >
+              <User size={18} />
+              Sign In
+            </button>
+            <button
+              onClick={() => { setShowAuth(true) }}
+              className="flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#18181b] px-6 py-3 font-medium hover:border-zinc-600 transition-colors"
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-white">
@@ -72,6 +116,20 @@ function App() {
               <Plus size={16} />
               Save
             </button>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[#27272a]">
+              <span className="text-sm text-zinc-400 truncate max-w-[100px]">
+                {user.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="rounded-lg p-2 text-zinc-400 hover:text-red-400 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -120,6 +178,14 @@ function App() {
       {showSave && <SaveModal onClose={() => setShowSave(false)} />}
       {showChat && <AIChat onClose={() => setShowChat(false)} />}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 
