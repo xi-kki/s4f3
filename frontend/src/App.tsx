@@ -6,7 +6,10 @@ import { SaveModal } from './components/SaveModal'
 import { AIChat } from './components/AIChat'
 import { SearchBar } from './components/SearchBar'
 import { AuthModal } from './components/AuthModal'
-import { LayoutGrid, List, Table, Kanban, Plus, MessageCircle, Loader2, LogOut, User } from 'lucide-react'
+import { 
+  LayoutGrid, List, Table, Kanban, Plus, MessageCircle, 
+  Loader2, LogOut, User, Link2, Bookmark, Sparkles
+} from 'lucide-react'
 
 function AppContent() {
   const { user, signOut, loading: authLoading } = useAuth()
@@ -42,7 +45,11 @@ function AppContent() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
         <div className="text-center">
-          <span className="text-6xl mb-4 block">🔗</span>
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Link2 className="text-white" size={32} />
+            </div>
+          </div>
           <h1 className="text-3xl font-bold mb-2">S4F3</h1>
           <p className="text-zinc-400 mb-8">AI-powered bookmarking — save smarter, find faster</p>
           <div className="flex gap-4 justify-center">
@@ -72,9 +79,14 @@ function AppContent() {
       <header className="sticky top-0 z-40 border-b border-[#27272a] bg-[#0a0a0b]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔗</span>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Link2 className="text-white" size={18} />
+            </div>
             <h1 className="text-xl font-bold">S4F3</h1>
-            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-400">AI</span>
+            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-400 flex items-center gap-1">
+              <Sparkles size={10} />
+              AI
+            </span>
           </div>
 
           <div className="flex-1 max-w-xl mx-8">
@@ -142,7 +154,9 @@ function AppContent() {
           </div>
         ) : bookmarks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-6xl mb-4">🔗</span>
+            <div className="h-16 w-16 rounded-2xl bg-zinc-800 flex items-center justify-center mb-4">
+              <Bookmark className="text-zinc-400" size={32} />
+            </div>
             <h2 className="text-xl font-semibold mb-2">Your library is empty</h2>
             <p className="text-zinc-400 mb-6">Save your first link to get started</p>
             <button

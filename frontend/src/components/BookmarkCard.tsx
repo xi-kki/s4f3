@@ -1,4 +1,4 @@
-import { Heart, ExternalLink, Trash2 } from 'lucide-react'
+import { Heart, ExternalLink, Trash2, Link2 } from 'lucide-react'
 import { useStore } from '../hooks/useBookmarks'
 import type { Bookmark } from '../types'
 
@@ -68,7 +68,7 @@ export function BookmarkCard({ bookmark, layout = 'grid' }: Props) {
       )}
       {!bookmark.image_url && (
         <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20">
-          <span className="text-4xl">🔗</span>
+          <Link2 className="text-zinc-400" size={32} />
         </div>
       )}
 

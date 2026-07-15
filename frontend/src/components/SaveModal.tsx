@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Loader2, Sparkles } from 'lucide-react'
+import { X, Loader2, Sparkles, Link2 } from 'lucide-react'
 import { useStore } from '../hooks/useBookmarks'
 import { summarizeUrl } from '../lib/api'
 
@@ -43,7 +43,7 @@ export function SaveModal({ onClose }: Props) {
       <div className="w-full max-w-lg rounded-2xl border border-[#27272a] bg-[#18181b] p-6 animate-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🔗</span>
+            <Link2 size={20} className="text-blue-400" />
             <h2 className="text-lg font-semibold">Save to S4F3</h2>
           </div>
           <button onClick={onClose} className="text-zinc-400 hover:text-white">
