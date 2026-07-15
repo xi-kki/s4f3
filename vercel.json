@@ -4,9 +4,12 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": { 
-        "includeFiles": ["backend/**"],
-        "installCommand": "pip install -r api/requirements.txt"
+        "includeFiles": ["backend/**"]
       }
+    },
+    {
+      "src": "frontend/dist/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -15,11 +18,12 @@
       "dest": "/api/index.py"
     },
     {
-      "handle": "filesystem"
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))",
+      "dest": "/frontend/dist/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
+      "dest": "/frontend/dist/index.html"
     }
   ]
 }
