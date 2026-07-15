@@ -1,6 +1,8 @@
 import { supabase } from './supabase'
 
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
+// In production, API is on the same domain
+// In development, it's on localhost:8000
+const API_URL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000')
 
 async function getHeaders() {
   const { data: { session } } = await supabase.auth.getSession()
@@ -12,13 +14,13 @@ async function getHeaders() {
 
 export async function fetchBookmarks(skip = 0, limit = 20) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/bookmarks/?skip=${skip}&limit=${limit}`, { headers })
+  const res = await fetch(`${API_URL}/api/bookmarks/?skip=${skip}&limit=${limit}`, { headers })
   return res.json()
 }
 
 export async function createBookmark(data: { url: string; title?: string; tags?: string[] }) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/bookmarks/`, {
+  const res = await fetch(`${API_URL}/api/bookmarks/`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data)
@@ -28,18 +30,18 @@ export async function createBookmark(data: { url: string; title?: string; tags?:
 
 export async function deleteBookmark(id: number) {
   const headers = await getHeaders()
-  await fetch(`${API_URL}/bookmarks/${id}`, { method: 'DELETE', headers })
+  await fetch(`${API_URL}/api/bookmarks/${id}`, { method: 'DELETE', headers })
 }
 
 export async function toggleFavorite(id: number) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/bookmarks/${id}/favorite`, { method: 'PATCH', headers })
+  const res = await fetch(`${API_URL}/api/bookmarks/${id}/favorite`, { method: 'PATCH', headers })
   return res.json()
 }
 
 export async function semanticSearch(query: string) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/search/semantic`, {
+  const res = await fetch(`${API_URL}/api/search/semantic`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ query })
@@ -49,13 +51,13 @@ export async function semanticSearch(query: string) {
 
 export async function textSearch(q: string) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/search/text?q=${encodeURIComponent(q)}`, { headers })
+  const res = await fetch(`${API_URL}/api/search/text?q=${encodeURIComponent(q)}`, { headers })
   return res.json()
 }
 
 export async function summarizeUrl(url: string) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/ai/summarize`, {
+  const res = await fetch(`${API_URL}/api/ai/summarize`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ url })
@@ -65,7 +67,7 @@ export async function summarizeUrl(url: string) {
 
 export async function aiChat(message: string) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/ai/chat`, {
+  const res = await fetch(`${API_URL}/api/ai/chat`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ message })
@@ -75,13 +77,13 @@ export async function aiChat(message: string) {
 
 export async function getCollections() {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/collections/`, { headers })
+  const res = await fetch(`${API_URL}/api/collections/`, { headers })
   return res.json()
 }
 
 export async function createCollection(data: { name: string; emoji?: string }) {
   const headers = await getHeaders()
-  const res = await fetch(`${API_URL}/collections/`, {
+  const res = await fetch(`${API_URL}/api/collections/`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data)
