@@ -13,3 +13,5 @@ build/
 .vite/
 *.log
 .DS_Store
+
+.vercel
