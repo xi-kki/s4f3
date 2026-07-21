@@ -1,17 +1,20 @@
-.env
-.env.local
-.env.production
-.env.development
-backend/.env
-frontend/.env
+# Dependencies
 node_modules/
 __pycache__/
 *.pyc
-.pytest_cache/
-dist/
-build/
-.vite/
-*.log
-.DS_Store
 
-.vercel
+# Environment
+.env
+frontend/.env
+
+# Build
+frontend/dist/
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

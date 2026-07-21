@@ -2,6 +2,10 @@
 
 > AI-powered cross-platform bookmarking — save from any platform, AI organizes everything, find anything in seconds.
 
+## 🚀 Live Demo
+
+**[https://frontend-six-beta-98.vercel.app](https://frontend-six-beta-98.vercel.app)**
+
 ## ✨ Features
 
 - **⚡ One-Click Save** — Save links from YouTube, Instagram, TikTok, X, any website
@@ -21,7 +25,7 @@
 | Database | PostgreSQL + pgvector |
 | AI | Groq (Llama 3 70B) |
 | State | Zustand |
-| Deploy | Vercel + Railway |
+| Deploy | Vercel (Full-Stack) |
 
 ## 🚀 Quick Start
 
@@ -34,37 +38,36 @@ npm run dev
 
 ### Backend
 ```bash
-cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn api.index:app --reload
 ```
 
 ### Database
 1. Create a Neon PostgreSQL database
 2. Run `backend/migrations/001_initial.sql`
-3. Add your `DATABASE_URL` to `backend/.env`
+3. Add your `DATABASE_URL` to `.env`
 
 ## 📁 Project Structure
 
 ```
 s4f3/
-├── frontend/              # React + Vite
+├── api/                 # Vercel Serverless Functions
+│   └── index.py        # FastAPI entry point
+├── app/                 # Backend application
+│   ├── api/             # API routes
+│   ├── core/            # Config, database, auth
+│   ├── models/          # SQLAlchemy models
+│   └── services/        # AI services
+├── frontend/            # React + Vite
 │   ├── src/
-│   │   ├── components/    # UI components
-│   │   ├── hooks/         # Zustand store
-│   │   ├── lib/           # API client, utils
-│   │   └── types/         # TypeScript types
+│   │   ├── components/  # UI components
+│   │   ├── hooks/       # Zustand store, auth
+│   │   ├── lib/         # API client, utils
+│   │   └── types/       # TypeScript types
 │   └── package.json
-├── backend/               # FastAPI
-│   ├── app/
-│   │   ├── api/           # API routes
-│   │   ├── core/          # Config, database
-│   │   ├── models/        # SQLAlchemy models
-│   │   └── services/      # AI services
-│   ├── migrations/        # SQL migrations
-│   └── requirements.txt
-├── CLAUDE.md              # AI rules
-└── README.md
+├── CLAUDE.md            # AI rules
+├── README.md
+└── vercel.json          # Vercel config
 ```
 
 ## 🔐 Environment Variables
@@ -75,14 +78,17 @@ See `.env.example` for all required variables.
 |----------|-------------|
 | `DATABASE_URL` | Neon PostgreSQL connection string |
 | `GROQ_API_KEY` | Groq API key for AI features |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `SUPABASE_JWT_SECRET` | Supabase JWT secret |
 
 ## 📊 Status
 
 - [x] Backend API (FastAPI)
 - [x] Frontend UI (React + Vite)
 - [x] AI Integration (Groq)
-- [ ] Database setup
-- [ ] Deployment
+- [x] Database setup (Neon PostgreSQL)
+- [x] Deployment (Vercel Full-Stack)
 
 ## 📝 License
 
