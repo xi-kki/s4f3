@@ -43,31 +43,141 @@ function AppContent() {
   // Show auth screen if not logged in
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Link2 className="text-white" size={32} />
+      <div className="min-h-screen bg-[#0a0a0b]">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/20 blur-[120px] rounded-full" />
+          
+          {/* Navigation */}
+          <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Link2 className="text-white" size={20} />
+              </div>
+              <span className="text-xl font-bold">S4F3</span>
             </div>
-          </div>
-          <h1 className="text-3xl font-bold mb-2">S4F3</h1>
-          <p className="text-zinc-400 mb-8">AI-powered bookmarking — save smarter, find faster</p>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => setShowAuth(true)}
-              className="flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-3 font-medium hover:bg-blue-600 transition-colors"
-            >
-              <User size={18} />
-              Sign In
-            </button>
-            <button
-              onClick={() => { setShowAuth(true) }}
-              className="flex items-center gap-2 rounded-lg border border-[#27272a] bg-[#18181b] px-6 py-3 font-medium hover:border-zinc-600 transition-colors"
-            >
-              Sign Up
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowAuth(true)}
+                className="text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setShowAuth(true)}
+                className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium hover:bg-blue-600 transition-colors"
+              >
+                Get Started Free
+              </button>
+            </div>
+          </nav>
+
+          {/* Hero Content */}
+          <div className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-32 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#18181b]/80 px-4 py-1.5 mb-6">
+              <Sparkles size={14} className="text-blue-400" />
+              <span className="text-xs text-zinc-400">AI-Powered Bookmarking</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+              Save smarter.
+              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"> Find faster.</span>
+            </h1>
+            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
+              Stop losing links in endless folders. S4F3 uses AI to organize, tag, and surface your bookmarks when you need them.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => setShowAuth(true)}
+                className="flex items-center gap-2 rounded-lg bg-blue-500 px-8 py-4 text-lg font-medium hover:bg-blue-600 transition-colors"
+              >
+                Start Saving — It's Free
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500 mt-4">No credit card required · Free forever</p>
           </div>
         </div>
+
+        {/* Features Section */}
+        <section className="relative py-24 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">Everything you need to save smarter</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">Powerful features that make bookmarking effortless</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { icon: Sparkles, title: 'AI Auto-Tagging', desc: 'Automatically categorize and tag your bookmarks with AI. Never organize manually again.' },
+                { icon: SearchBar, title: 'Natural Language Search', desc: 'Find bookmarks by describing what you remember. "That article about React performance" — found.' },
+                { icon: LayoutGrid, title: 'Multiple Views', desc: 'Grid, list, table, or kanban — view your bookmarks the way that works best for you.' },
+              ].map((feature, i) => (
+                <div key={i} className="p-6 rounded-2xl border border-[#27272a] bg-[#18181b]/50 hover:border-zinc-600 transition-colors">
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
+                    <feature.icon size={24} className="text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-zinc-400 text-sm">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-24 px-6 bg-[#18181b]/30">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">How it works</h2>
+              <p className="text-zinc-400">Three simple steps to organized bookmarks</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { step: '01', title: 'Save', desc: 'Click the extension or paste a URL. S4F3 captures everything automatically.' },
+                { step: '02', title: 'AI Organizes', desc: 'Our AI reads, categorizes, and tags your bookmark instantly.' },
+                { step: '03', title: 'Find Anytime', desc: 'Search naturally or browse by category. Your bookmarks, always accessible.' },
+              ].map((item, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-5xl font-bold text-blue-500/20 mb-4">{item.step}</div>
+                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                  <p className="text-zinc-400">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-4xl font-bold mb-4">Ready to save smarter?</h2>
+            <p className="text-zinc-400 mb-8">Join thousands who've ditched messy bookmarks folders</p>
+            <button
+              onClick={() => setShowAuth(true)}
+              className="flex items-center gap-2 mx-auto rounded-lg bg-blue-500 px-8 py-4 text-lg font-medium hover:bg-blue-600 transition-colors"
+            >
+              <User size={20} />
+              Get Started Free
+            </button>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-[#27272a] py-8 px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Link2 className="text-white" size={12} />
+              </div>
+              <span className="text-sm font-medium">S4F3</span>
+            </div>
+            <p className="text-xs text-zinc-500">© 2026 S4F3. Save smarter, find faster.</p>
+          </div>
+        </footer>
+
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </div>
     )
