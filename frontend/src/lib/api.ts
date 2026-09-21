@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
 
-// In production, API is on the same domain
+// In production, API is on the backend domain (Render/Railway)
 // In development, it's on localhost:8000
-const API_URL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000')
-
+const API_URL = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://s4f3-backend.onrender.com')
+  : (import.meta.env.VITE_API_URL || 'http://localhost:8000')
 async function getHeaders() {
   const { data: { session } } = await supabase.auth.getSession()
   return {

@@ -5,9 +5,10 @@ import type { Bookmark } from '../types'
 interface Props {
   bookmark: Bookmark
   layout?: 'grid' | 'list'
+  isFocused?: boolean
 }
 
-export function BookmarkCard({ bookmark, layout = 'grid' }: Props) {
+export function BookmarkCard({ bookmark, layout = 'grid', isFocused = false }: Props) {
   const { favBookmark, removeBookmark } = useStore()
 
   if (layout === 'list') {
@@ -17,38 +18,40 @@ export function BookmarkCard({ bookmark, layout = 'grid' }: Props) {
           <img
             src={bookmark.image_url}
             alt=""
-            className="h-12 w-12 rounded-lg object-cover"
+            className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
           />
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="truncate font-medium">{bookmark.title || 'Untitled'}</h3>
-          <p className="truncate text-sm text-zinc-400">{bookmark.url}</p>
+          <h3 className="font-medium truncate mb-1">{bookmark.title || 'Untitled'}</h3>
+          <p className="text-sm text-zinc-400 truncate">{bookmark.description || 'No description'}</p>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {bookmark.ai_tags?.slice(0, 3).map((tag) => (
+              <span key={tag} className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
-        {bookmark.ai_tags?.slice(0, 3).map((tag) => (
-          <span key={tag} className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
-            {tag}
-          </span>
-        ))}
         <div className="flex gap-1">
           <button
             onClick={() => favBookmark(bookmark.id)}
-            className={`rounded-lg p-2 transition-colors ${
-              bookmark.is_favorite ? 'text-red-500' : 'text-zinc-400 hover:text-white'
-            }`}
+            className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+            title={bookmark.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <Heart size={16} fill={bookmark.is_favorite ? 'currentColor' : 'none'} />
+            <Heart className={`${bookmark.is_favorite ? 'fill-red-400 text-red-400' : ''}`} size={16} />
           </button>
           <a
             href={bookmark.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg p-2 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-zinc-400 hover:text-blue-400 transition-colors"
           >
             <ExternalLink size={16} />
           </a>
           <button
             onClick={() => removeBookmark(bookmark.id)}
-            className="rounded-lg p-2 text-zinc-400 hover:text-red-500 transition-colors"
+            className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+            title="Delete"
           >
             <Trash2 size={16} />
           </button>
@@ -58,7 +61,14 @@ export function BookmarkCard({ bookmark, layout = 'grid' }: Props) {
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-[#27272a] bg-[#18181b] hover:border-zinc-600 transition-all">
+    <div
+      className={`group relative overflow-hidden rounded-xl border transition-all ${
+        isFocused
+          ? 'border-blue-500 ring-2 ring-blue-500/20'
+          : 'border-[#27272a] hover:border-zinc-600'
+      } bg-[#18181b}`}
+      tabIndex={0}
+    >
       {bookmark.image_url && (
         <img
           src={bookmark.image_url}
@@ -73,54 +83,59 @@ export function BookmarkCard({ bookmark, layout = 'grid' }: Props) {
       )}
 
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 font-medium">{bookmark.title || 'Untitled'}</h3>
-          <button
-            onClick={() => favBookmark(bookmark.id)}
-            className={`shrink-0 rounded-lg p-1 transition-colors ${
-              bookmark.is_favorite ? 'text-red-500' : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            <Heart size={14} fill={bookmark.is_favorite ? 'currentColor' : 'none'} />
-          </button>
+        <h3 className="font-medium text-sm truncate mb-1">{bookmark.title || 'Untitled'}</h3>
+        <p className="text-xs text-zinc-400 line-clamp-2 mb-2">{bookmark.description || 'No description'}</p>
+        <div className="flex flex-wrap gap-1 mb-2">
+          {(bookmark.ai_tags || []).slice(0, 3).map((tag) => (
+            <span key={tag} className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-400">
+              {tag}
+            </span>
+          ))}
         </div>
-
-        {bookmark.description && (
-          <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{bookmark.description}</p>
-        )}
-
-        {bookmark.ai_tags?.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1">
-            {bookmark.ai_tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300"
-              >
-                {tag}
-              </span>
-            ))}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-zinc-500">
+            {bookmark.source || 'web'}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => favBookmark(bookmark.id)}
+              className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+              title={bookmark.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart className={`${bookmark.is_favorite ? 'fill-red-400 text-red-400' : ''}`} size={14} />
+            </button>
+            <a
+              href={bookmark.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 text-zinc-400 hover:text-blue-400 transition-colors"
+            >
+              <ExternalLink size={14} />
+            </a>
+            <button
+              onClick={() => removeBookmark(bookmark.id)}
+              className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
-        )}
-
-        <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-          <span>{bookmark.source || new URL(bookmark.url).hostname}</span>
-          <span>{new Date(bookmark.created_at).toLocaleDateString()}</span>
         </div>
       </div>
 
       {/* Hover Actions */}
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <a
-          href={bookmark.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+        <button
+          onClick={() => favBookmark(bookmark.id)}
+          className="p-1.5 rounded bg-black/50 text-zinc-300 hover:text-red-400 hover:bg-red-500/20 transition-colors"
+          title={bookmark.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <ExternalLink size={14} />
-        </a>
+          <Heart className={`${bookmark.is_favorite ? 'fill-red-400 text-red-400' : ''}`} size={14} />
+        </button>
         <button
           onClick={() => removeBookmark(bookmark.id)}
-          className="rounded-lg bg-black/60 p-1.5 text-white hover:bg-red-500/80 transition-colors"
+          className="p-1.5 rounded bg-black/50 text-zinc-300 hover:text-red-400 hover:bg-red-500/20 transition-colors"
+          title="Delete"
         >
           <Trash2 size={14} />
         </button>

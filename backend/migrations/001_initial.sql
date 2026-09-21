@@ -43,8 +43,8 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_source ON bookmarks(source);
 CREATE INDEX IF NOT EXISTS idx_collections_user ON collections(user_id);
 
 -- Vector index for semantic search
-CREATE INDEX IF NOT EXISTS idx_bookmarks_embedding ON embeddings ivfflat lists 100
-    USING vector (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_embedding ON bookmarks
+    USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- Full-text search index
 CREATE INDEX IF NOT EXISTS idx_bookmarks_search ON bookmarks

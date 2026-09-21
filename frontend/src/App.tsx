@@ -1,22 +1,106 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useStore } from './hooks/useBookmarks'
 import { BookmarkCard } from './components/BookmarkCard'
+import { TableView } from './components/TableView'
+import { KanbanView } from './components/KanbanView'
+import { GridSkeleton, ListSkeleton, TableSkeleton, KanbanSkeleton } from './components/Skeleton'
 import { SaveModal } from './components/SaveModal'
 import { AIChat } from './components/AIChat'
 import { SearchBar } from './components/SearchBar'
-import { AuthModal } from './components/AuthModal'
-import { 
-  LayoutGrid, List, Table, Kanban, Plus, MessageCircle, 
-  Loader2, LogOut, User, Link2, Bookmark, Sparkles
+
+import { LandingPage } from './components/LandingPage'
+import { CollectionsSidebar, CollectionModal } from './components/CollectionsSidebar'
+import { OnboardingOverlay } from './components/OnboardingOverlay'
+import { Toaster } from 'sonner'
+import {
+  LayoutGrid, List, Table, Kanban, Plus, MessageCircle,
+  Loader2, LogOut, User, Link2, Bookmark, Sparkles, Folder
 } from 'lucide-react'
 
 function AppContent() {
   const { user, signOut, loading: authLoading } = useAuth()
-  const { bookmarks, view, setView, loadBookmarks, loading } = useStore()
+  const { bookmarks, view, setView, loadBookmarks, loadCollections, loading, collections, updateCollection, createCollection: createCollectionApi } = useStore()
   const [showSave, setShowSave] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [showCollections, setShowCollections] = useState(false)
+  const [showCreateCollection, setShowCreateCollection] = useState(false)
+  const [editingCollection, setEditingCollection] = useState<typeof collections[0] | null>(null)
+  const [activeCollectionId, setActiveCollectionId] = useState<number | null>(null)
+  const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('s4f3_onboarding_complete'))
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Filter bookmarks by active collection
+  const filteredBookmarks = useMemo(() => {
+    if (activeCollectionId === null) return bookmarks
+    return bookmarks.filter((b) => b.collection_id === activeCollectionId)
+  }, [bookmarks, activeCollectionId])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K -> Focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+      // Escape -> Close modals
+      if (e.key === 'Escape') {
+        if (showChat) setShowChat(false)
+        if (showSave) setShowSave(false)
+        if (showAuth) setShowAuth(false)
+        if (showSettings) setShowSettings(false)
+        if (showCollections) setShowCollections(false)
+        if (showCreateCollection) setShowCreateCollection(false)
+        if (editingCollection) setEditingCollection(null)
+        return
+      }
+      // Arrow key navigation for grid view
+      if (view === 'grid' && filteredBookmarks.length > 0 && !e.metaKey && !e.ctrlKey) {
+        const cols = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1
+        let newIndex = focusedIndex
+        switch (e.key) {
+          case 'ArrowRight':
+            newIndex = focusedIndex < filteredBookmarks.length - 1 ? focusedIndex + 1 : 0
+            break
+          case 'ArrowLeft':
+            newIndex = focusedIndex > 0 ? focusedIndex - 1 : filteredBookmarks.length - 1
+            break
+          case 'ArrowDown':
+            newIndex = Math.min(focusedIndex + cols, filteredBookmarks.length - 1)
+            break
+          case 'ArrowUp':
+            newIndex = Math.max(focusedIndex - cols, 0)
+            break
+        }
+        if (newIndex !== focusedIndex) {
+          e.preventDefault()
+          setFocusedIndex(newIndex)
+          return
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showChat, showSave, showAuth, showSettings, showCollections, showCreateCollection, editingCollection, view, filteredBookmarks, focusedIndex])
+
+  // Load saved view from localStorage on mount
+  useEffect(() => {
+    const savedView = localStorage.getItem('s4f3_view') as 'grid' | 'list' | 'table' | 'kanban' | null
+    if (savedView && ['grid', 'list', 'table', 'kanban'].includes(savedView)) {
+      setView(savedView)
+    }
+  }, [setView])
+
+  // Persist view to localStorage
+  const handleViewChange = useCallback((newView: 'grid' | 'list' | 'table' | 'kanban') => {
+    setView(newView)
+    localStorage.setItem('s4f3_view', newView)
+  }, [setView])
 
   useEffect(() => {
     if (user) {
@@ -43,145 +127,19 @@ function AppContent() {
   // Show auth screen if not logged in
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b]">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/20 blur-[120px] rounded-full" />
-          
-          {/* Navigation */}
-          <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Link2 className="text-white" size={20} />
-              </div>
-              <span className="text-xl font-bold">S4F3</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowAuth(true)}
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setShowAuth(true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium hover:bg-blue-600 transition-colors"
-              >
-                Get Started Free
-              </button>
-            </div>
-          </nav>
-
-          {/* Hero Content */}
-          <div className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-32 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#27272a] bg-[#18181b]/80 px-4 py-1.5 mb-6">
-              <Sparkles size={14} className="text-blue-400" />
-              <span className="text-xs text-zinc-400">AI-Powered Bookmarking</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              Save smarter.
-              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"> Find faster.</span>
-            </h1>
-            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-              Stop losing links in endless folders. S4F3 uses AI to organize, tag, and surface your bookmarks when you need them.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => setShowAuth(true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-500 px-8 py-4 text-lg font-medium hover:bg-blue-600 transition-colors"
-              >
-                Start Saving — It's Free
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-            </div>
-            <p className="text-xs text-zinc-500 mt-4">No credit card required · Free forever</p>
-          </div>
-        </div>
-
-        {/* Features Section */}
-        <section className="relative py-24 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4">Everything you need to save smarter</h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto">Powerful features that make bookmarking effortless</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { icon: Sparkles, title: 'AI Auto-Tagging', desc: 'Automatically categorize and tag your bookmarks with AI. Never organize manually again.' },
-                { icon: SearchBar, title: 'Natural Language Search', desc: 'Find bookmarks by describing what you remember. "That article about React performance" — found.' },
-                { icon: LayoutGrid, title: 'Multiple Views', desc: 'Grid, list, table, or kanban — view your bookmarks the way that works best for you.' },
-              ].map((feature, i) => (
-                <div key={i} className="p-6 rounded-2xl border border-[#27272a] bg-[#18181b]/50 hover:border-zinc-600 transition-colors">
-                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
-                    <feature.icon size={24} className="text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-zinc-400 text-sm">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="py-24 px-6 bg-[#18181b]/30">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4">How it works</h2>
-              <p className="text-zinc-400">Three simple steps to organized bookmarks</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { step: '01', title: 'Save', desc: 'Click the extension or paste a URL. S4F3 captures everything automatically.' },
-                { step: '02', title: 'AI Organizes', desc: 'Our AI reads, categorizes, and tags your bookmark instantly.' },
-                { step: '03', title: 'Find Anytime', desc: 'Search naturally or browse by category. Your bookmarks, always accessible.' },
-              ].map((item, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-5xl font-bold text-blue-500/20 mb-4">{item.step}</div>
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                  <p className="text-zinc-400">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-24 px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-4">Ready to save smarter?</h2>
-            <p className="text-zinc-400 mb-8">Join thousands who've ditched messy bookmarks folders</p>
-            <button
-              onClick={() => setShowAuth(true)}
-              className="flex items-center gap-2 mx-auto rounded-lg bg-blue-500 px-8 py-4 text-lg font-medium hover:bg-blue-600 transition-colors"
-            >
-              <User size={20} />
-              Get Started Free
-            </button>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-[#27272a] py-8 px-6">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Link2 className="text-white" size={12} />
-              </div>
-              <span className="text-sm font-medium">S4F3</span>
-            </div>
-            <p className="text-xs text-zinc-500">© 2026 S4F3. Save smarter, find faster.</p>
-          </div>
-        </footer>
-
-        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-      </div>
+      <LandingPage onSignIn={() => setShowAuth(true)} onGetStarted={() => setShowAuth(true)} />
     )
   }
+
+  const handleCreateCollection = useCallback(async (name: string, emoji: string) => {
+    await createCollectionApi({ name, emoji })
+    await loadCollections()
+  }, [createCollectionApi, loadCollections])
+
+  const handleUpdateCollection = useCallback(async (id: number, name: string, emoji: string) => {
+    await updateCollection(id, { name, emoji })
+    await loadCollections()
+  }, [updateCollection, loadCollections])
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-white">
@@ -200,16 +158,38 @@ function AppContent() {
           </div>
 
           <div className="flex-1 max-w-xl mx-8">
-            <SearchBar />
+            <SearchBar externalRef={searchInputRef} />
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Collections Filter Button */}
+            <button
+              onClick={() => setShowCollections(!showCollections)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                showCollections
+                  ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                  : 'border-[#27272a] bg-[#18181b] text-zinc-400 hover:text-white'
+              }`}
+              title="Collections"
+            >
+              <Folder size={16} />
+              <span className="hidden sm:inline">
+                {activeCollectionId === null ? 'All' : collections.find(c => c.id === activeCollectionId)?.name || 'All'}
+              </span>
+              {activeCollectionId !== null && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setActiveCollectionId(null) }}
+                  className="ml-1 p-0.5 rounded text-zinc-400 hover:text-white"
+                >✕</button>
+              )}
+            </button>
+
             {/* View Toggle */}
             <div className="flex rounded-lg border border-[#27272a] bg-[#18181b] p-1">
               {views.map(({ id, icon: Icon, label }) => (
                 <button
                   key={id}
-                  onClick={() => setView(id)}
+                  onClick={() => handleViewChange(id)}
                   className={`rounded-md p-1.5 transition-colors ${
                     view === id
                       ? 'bg-blue-500 text-white'
@@ -239,6 +219,15 @@ function AppContent() {
               Save
             </button>
 
+            {/* Settings Button */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="rounded-lg border border-[#27272a] bg-[#18181b] p-2 text-zinc-400 hover:text-white transition-colors"
+              title="Settings"
+            >
+              <User size={18} />
+            </button>
+
             {/* User Menu */}
             <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[#27272a]">
               <span className="text-sm text-zinc-400 truncate max-w-[100px]">
@@ -256,56 +245,215 @@ function AppContent() {
         </div>
       </header>
 
+      {/* Collections Sidebar (Mobile) */}
+      <CollectionsSidebar
+        isOpen={showCollections}
+        onClose={() => setShowCollections(false)}
+        activeCollectionId={activeCollectionId}
+        onSelectCollection={setActiveCollectionId}
+      />
+
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-blue-500" size={32} />
-          </div>
-        ) : bookmarks.length === 0 ? (
+          <>
+            {view === 'grid' && <GridSkeleton />}
+            {view === 'list' && <ListSkeleton />}
+            {view === 'table' && <TableSkeleton />}
+            {view === 'kanban' && <KanbanSkeleton />}
+          </>
+        ) : filteredBookmarks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="h-16 w-16 rounded-2xl bg-zinc-800 flex items-center justify-center mb-4">
               <Bookmark className="text-zinc-400" size={32} />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Your library is empty</h2>
-            <p className="text-zinc-400 mb-6">Save your first link to get started</p>
+            <h2 className="text-xl font-semibold mb-2">
+              {activeCollectionId ? 'This collection is empty' : 'Your library is empty'}
+            </h2>
+            <p className="text-zinc-400 mb-6">
+              {activeCollectionId ? 'Add some bookmarks to this collection' : 'Save your first link to get started'}
+            </p>
             <button
               onClick={() => setShowSave(true)}
               className="flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-3 font-medium hover:bg-blue-600 transition-colors"
             >
               <Plus size={18} />
-              Save your first link
+              {activeCollectionId ? 'Add to collection' : 'Save your first link'}
             </button>
+            
+            {/* Example bookmarks */}
+            {!activeCollectionId && (
+              <div className="mt-10 w-full max-w-md">
+                <p className="text-sm text-zinc-500 mb-4 text-center">Or try with example links:</p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-2">Development</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {[
+                        { url: 'https://github.com/vercel/next.js', label: 'Next.js' },
+                        { url: 'https://react.dev', label: 'React' },
+                        { url: 'https://tailwindcss.com', label: 'Tailwind CSS' },
+                        { url: 'https://www.typescriptlang.org', label: 'TypeScript' },
+                      ].map((item) => (
+                        <button
+                          key={item.url}
+                          onClick={() => {
+                            setShowSave(true)
+                            useStore.getState().addBookmark(item.url)
+                          }}
+                          className="text-left p-3 rounded-lg border border-[#27272a] bg-[#18181b] hover:border-blue-500 transition-colors text-sm flex items-center gap-2"
+                        >
+                          <span className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs">{item.label[0]}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-2">Design & Tools</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {[
+                        { url: 'https://www.figma.com', label: 'Figma' },
+                        { url: 'https://www.notion.so', label: 'Notion' },
+                        { url: 'https://vercel.com', label: 'Vercel' },
+                        { url: 'https://supabase.com', label: 'Supabase' },
+                      ].map((item) => (
+                        <button
+                          key={item.url}
+                          onClick={() => {
+                            setShowSave(true)
+                            useStore.getState().addBookmark(item.url)
+                          }}
+                          className="text-left p-3 rounded-lg border border-[#27272a] bg-[#18181b] hover:border-purple-500 transition-colors text-sm flex items-center gap-2"
+                        >
+                          <span className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs">{item.label[0]}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : view === 'grid' ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {bookmarks.map((bookmark) => (
-              <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {filteredBookmarks.map((bookmark, index) => (
+              <BookmarkCard key={bookmark.id} bookmark={bookmark} isFocused={index === focusedIndex} />
             ))}
           </div>
         ) : view === 'list' ? (
           <div className="flex flex-col gap-2">
-            {bookmarks.map((bookmark) => (
+            {filteredBookmarks.map((bookmark) => (
               <BookmarkCard key={bookmark.id} bookmark={bookmark} layout="list" />
             ))}
           </div>
+        ) : view === 'table' ? (
+          <TableView />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {bookmarks.map((bookmark) => (
-              <BookmarkCard key={bookmark.id} bookmark={bookmark} />
-            ))}
-          </div>
+          <KanbanView />
         )}
       </main>
 
       {/* Modals */}
       {showSave && <SaveModal onClose={() => setShowSave(false)} />}
-      {showChat && <AIChat onClose={() => setShowChat(false)} />}
+      {showOnboarding && <OnboardingOverlay onClose={() => { localStorage.setItem('s4f3_onboarding_complete', 'true'); setShowOnboarding(false); }} />}
+      {showChat && <AIChat isOpen={showChat} onClose={() => setShowChat(false)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showCreateCollection && (
+        <CollectionModal
+          isOpen={showCreateCollection}
+          onClose={() => setShowCreateCollection(false)}
+          onCreate={handleCreateCollection}
+        />
+      )}
+      {editingCollection && (
+        <CollectionModal
+          isOpen={!!editingCollection}
+          onClose={() => setEditingCollection(null)}
+          onUpdate={handleUpdateCollection}
+          editing={editingCollection}
+        />
+      )}
+      
+      <Toaster position="bottom-right" theme="dark" />
+    </div>
+  )
+}
+
+
+function SettingsModal({ onClose }: { onClose: () => void }) {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('s4f3_theme') as 'light' | 'dark') || 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('s4f3_theme', theme)
+  }, [theme])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-[#27272a] bg-[#18181b] p-6 animate-in">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">Settings</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white">✕</button>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-3">Theme</label>
+            <div className="flex gap-3">
+              {['light', 'dark'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t as 'light' | 'dark')}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-lg border px-4 py-3 transition-colors ${
+                    theme === t
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                      : 'border-[#27272a] text-zinc-400 hover:border-zinc-600'
+                  }`}
+                >
+                  {t === 'light' ? '☀️' : '🌙'} <span className="capitalize">{t}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-3">Keyboard Shortcuts</label>
+            <div className="space-y-2 text-sm text-zinc-400">
+              <div className="flex items-center gap-2">
+                <kbd className="inline-flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 font-mono">
+                  <span>⌘</span>K
+                </kbd>
+                <span>Focus search</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="inline-flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 font-mono">
+                  <span>Esc</span>
+                </kbd>
+                <span>Close modals</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-[#27272a]">
+            <p className="text-xs text-zinc-500 text-center">S4F3 v1.0 — Built with AI</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
 function App() {
+  // Apply theme on mount
+  useEffect(() => {
+    const theme = (localStorage.getItem('s4f3_theme') as 'light' | 'dark') || 'dark'
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }, [])
+
   return (
     <AuthProvider>
       <AppContent />

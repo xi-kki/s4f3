@@ -1,16 +1,11 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "pip install --break-system-packages -r requirements.txt",
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "destination": "/frontend/dist/index.html"
     }
   ]
 }

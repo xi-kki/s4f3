@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -6,7 +6,7 @@ from typing import Optional
 from app.core.database import get_db
 from app.core.auth import verify_token
 from app.models.bookmark import Bookmark
-from app.services.ai import summarize_content, chat_with_bookmarks
+from app.services.ai import summarize_content, chat_with_bookmarks, fetch_url_preview
 
 router = APIRouter()
 
@@ -17,6 +17,9 @@ class SummarizeRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+
+class PreviewRequest(BaseModel):
+    url: str
 
 @router.post("/summarize")
 async def summarize_url(data: SummarizeRequest):
@@ -44,3 +47,10 @@ async def chat(
     
     response = await chat_with_bookmarks(data.message, context)
     return {"response": response, "bookmarks_count": len(bookmarks)}
+
+@router.post("/preview")
+async def preview_url(data: PreviewRequest):
+    preview = await fetch_url_preview(data.url)
+    if not preview:
+        raise HTTPException(status_code=400, detail="Could not fetch preview")
+    return {"preview": preview}
