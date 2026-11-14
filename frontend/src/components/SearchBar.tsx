@@ -15,7 +15,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>((props, re
   const { search, semanticSearch, loadBookmarks } = useStore()
   const [searching, setSearching] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const debounceTimerRef = useRef<NodeJS.Timeout>()
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
   // Expose focus to parent via ref
   useImperativeHandle(ref, () => inputRef.current!, [])
@@ -114,6 +114,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>((props, re
       <div className="absolute left-10 flex items-center gap-1 rounded-lg bg-[#0a0a0b] border border-[#27272a] p-0.5 mr-2">
         <button
           onClick={() => setSearchMode('text')}
+          aria-label="Text search mode"
+          aria-pressed={searchMode === 'text'}
           className={`rounded-md px-2 py-1 text-xs transition-colors ${
             searchMode === 'text'
               ? 'bg-blue-500 text-white'
@@ -125,6 +127,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>((props, re
         </button>
         <button
           onClick={() => setSearchMode('semantic')}
+          aria-label="Semantic AI search mode"
+          aria-pressed={searchMode === 'semantic'}
           className={`rounded-md px-2 py-1 text-xs transition-colors ${
             searchMode === 'semantic'
               ? 'bg-purple-500 text-white'
@@ -138,20 +142,23 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>((props, re
 
       <input
         ref={inputRef}
-        type="text"
+        type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={() => setTimeout(() => setShowHistory(false), 200)}
         placeholder="Search your bookmarks... (⌘K to focus)"
-        className="w-full rounded-lg border border-[#27272a] bg-[#18181b] pl-28 pr-10 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+        aria-label="Search your bookmarks"
+        role="searchbox"
+        className="w-full rounded-lg border border-[#27272a] bg-[#18181b] pl-28 pr-10 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-[border-color,box-shadow]"
       />
 
       {query && (
         <button
           onClick={handleClear}
-          className="absolute right-3 text-zinc-400 hover:text-white"
+          aria-label={searching ? 'Searching' : 'Clear search'}
+          className="absolute right-3 flex h-6 w-6 items-center justify-center text-zinc-400 hover:text-white transition-colors"
         >
           {searching ? <Loader2 className="animate-spin" size={14} /> : <X size={14} />}
         </button>
